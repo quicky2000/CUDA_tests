@@ -35,9 +35,9 @@ class dim3
    uint32_t y;
    uint32_t z;
 };
-#define MY_CUDA_PARAMS_DECL const dim3 & threadIdx, const dim3 & blockIdx, const dim3 & blockDim, const dim3 & gridDim,
-#define MY_CUDA_PARAMS_INST threadIdx, blockIdx, blockDim, gridDim,
-#define COMMON_KERNEL_ATTRIBUTES
+
+#define CUDA_KERNEL(name,args...) void name(const dim3 & threadIdx, const dim3 & blockIdx, const dim3 & blockDim, const dim3 & gridDim,args)
+
 #define cudaFree free
 #define cudaMalloc(ptr,size) { (*ptr) = (std::remove_pointer<decltype(ptr)>::type)malloc(size);}
 #define cudaMemcpy(dest, src , size, direction) {memcpy(dest, src, size);}
@@ -65,10 +65,9 @@ class dim3
 }
 #define __global__
 #else // __NVCC__
-#define MY_CUDA_PARAMS_DECL
-#define MY_CUDA_PARAMS_INST
+#define CUDA_KERNEL(name,args...) __global__ void name(args)
+
 #define launch_kernels(name,grid,block,args...) { name<<<grid,block>>>(args);}
-#define COMMON_KERNEL_ATTRIBUTES __forceinline__ __device__
 
 #define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
 inline void gpuAssert(cudaError_t p_code, const char * p_file, int p_line, bool p_abort = true)

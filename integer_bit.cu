@@ -22,19 +22,12 @@
 
 #include "my_cuda.h"
 
-COMMON_KERNEL_ATTRIBUTES
-void common_kernel(MY_CUDA_PARAMS_DECL uint32_t * p_int_ptr, uint32_t * p_nipples_ptr)
+CUDA_KERNEL(cuda_kernel, uint32_t * p_int_ptr, uint32_t * p_nipples_ptr)
 {
   int l_shift = threadIdx.x << 2;
   uint32_t l_mask = ((uint32_t)0xF) << l_shift;
   p_nipples_ptr[threadIdx.x] = (*p_int_ptr & l_mask) >> l_shift;
 }
-__global__
-void cuda_kernel(MY_CUDA_PARAMS_DECL uint32_t * p_int_ptr, uint32_t * p_nipples_ptr)
-{
-  common_kernel(MY_CUDA_PARAMS_INST p_int_ptr, p_nipples_ptr);
-}
-
 
 int main(void)
 {
