@@ -20,56 +20,7 @@
 #include <cinttypes>
 #include <cstring>
 
-#ifndef __NVCC__
-class dim3
-{
-  public:
-  inline dim3(uint32_t p_x = 1, uint32_t p_y = 1, uint32_t p_z = 1):
-    x(p_x),
-    y(p_y),
-    z(p_z)
-  {
-  }
-
-   uint32_t x;
-   uint32_t y;
-   uint32_t z;
-};
-#define MY_CUDA_PARAMS_DECL const dim3 & threadIdx, const dim3 & blockIdx, const dim3 & blockDim, const dim3 & gridDim,
-#define MY_CUDA_PARAMS_INST threadIdx, blockIdx, blockDim, gridDim,
-#define COMMON_KERNEL_ATTRIBUTES
-#define cudaFree free
-#define cudaMalloc(ptr,size) { (*ptr) = (std::remove_pointer<decltype(ptr)>::type)malloc(size);}
-#define cudaMemcpy(dest, src , size, direction) {memcpy(dest, src, size);}
-#define launch_kernels(name,grid,block,args...) { dim3 l_blockIdx(0,0,0);                                      \
-  for(l_blockIdx.z = 0 ; l_blockIdx.z < grid.z ; ++l_blockIdx.z)                                               \
-    {                                                                                                          \
-      for(l_blockIdx.y = 0 ; l_blockIdx.y < grid.y ; ++l_blockIdx.y)                                           \
-	{                                                                                                      \
-	  for(l_blockIdx.x = 0 ; l_blockIdx.x < grid.x ; ++l_blockIdx.x)                                       \
-	    {                                                                                                  \
-	      dim3 l_threadIdx(0,0,0);                                                                         \
-	      for(l_threadIdx.z = 0 ; l_threadIdx.z < block.z ; ++l_threadIdx.z)                               \
-		{                                                                                              \
-		  for(l_threadIdx.y = 0 ; l_threadIdx.y < block.y ; ++l_threadIdx.y)                           \
-		    {                                                                                          \
-		      for(l_threadIdx.x = 0 ; l_threadIdx.x < block.x ; ++l_threadIdx.x)                       \
-			{                                                                                      \
-			  name(l_threadIdx, l_blockIdx, block, grid,args);                                     \
-			}                                                                                      \
-		    }                                                                                          \
-		}                                                                                              \
-	    }                                                                                                  \
-	}                                                                                                      \
-    }                                                                                                          \
-}
-#define __global__
-#else
-#define MY_CUDA_PARAMS_DECL
-#define MY_CUDA_PARAMS_INST
-#define launch_kernels(name,grid,block,args...) { name<<<grid,block>>>(args);}
-#define COMMON_KERNEL_ATTRIBUTES __forceinline__ __device__
-#endif // __NVCC__
+#include "my_cuda.h"
 
 COMMON_KERNEL_ATTRIBUTES
 void common_kernel(MY_CUDA_PARAMS_DECL uint32_t * p_int_ptr, uint32_t * p_nipples_ptr)
@@ -78,20 +29,6 @@ void common_kernel(MY_CUDA_PARAMS_DECL uint32_t * p_int_ptr, uint32_t * p_nipple
   uint32_t l_mask = ((uint32_t)0xF) << l_shift;
   p_nipples_ptr[threadIdx.x] = (*p_int_ptr & l_mask) >> l_shift;
 }
-
-#ifdef __NVCC__
-
-#define gpuErrChk(ans) { gpuAssert((ans), __FILE__, __LINE__); }
-inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
-{
-   if (code != cudaSuccess) 
-   {
-      std::cerr << "GPUassert: " << cudaGetErrorString(code) << " @ " << file << ":" << line << std::endl ;
-      if (abort) exit(code);
-   }
-}
-#endif // __NVCC__
-
 __global__
 void cuda_kernel(MY_CUDA_PARAMS_DECL uint32_t * p_int_ptr, uint32_t * p_nipples_ptr)
 {
