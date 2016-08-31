@@ -37,18 +37,18 @@ int main(void)
   uint32_t * l_int_ptr;
   uint32_t * l_nipples_ptr;
 
-  cudaMalloc(&l_int_ptr, sizeof(uint32_t));
-  cudaMalloc(&l_nipples_ptr, sizeof(uint32_t) * 8);
-  cudaMemcpy(l_int_ptr, &l_int, sizeof(uint32_t), cudaMemcpyHostToDevice);
-  cudaMemcpy(l_nipples_ptr, &l_nipples[0], sizeof(uint32_t) * 8, cudaMemcpyHostToDevice);
+  gpuErrChk(cudaMalloc(&l_int_ptr, sizeof(uint32_t)));
+  gpuErrChk(cudaMalloc(&l_nipples_ptr, sizeof(uint32_t) * 8));
+  gpuErrChk(cudaMemcpy(l_int_ptr, &l_int, sizeof(uint32_t), cudaMemcpyHostToDevice));
+  gpuErrChk(cudaMemcpy(l_nipples_ptr, &l_nipples[0], sizeof(uint32_t) * 8, cudaMemcpyHostToDevice));
 
   dim3 dimBlock(8, 1);
   dim3 dimGrid( 1, 1);
   launch_kernels(cuda_kernel,dimGrid, dimBlock,l_int_ptr, l_nipples_ptr);
 
-  cudaMemcpy(l_nipples, l_nipples_ptr, sizeof(uint32_t) * 8, cudaMemcpyDeviceToHost);
-  cudaFree(l_nipples_ptr);
-  cudaFree(l_int_ptr);
+  gpuErrChk(cudaMemcpy(l_nipples, l_nipples_ptr, sizeof(uint32_t) * 8, cudaMemcpyDeviceToHost));
+  gpuErrChk(cudaFree(l_nipples_ptr));
+  gpuErrChk(cudaFree(l_int_ptr));
 
   std::cout << std::hex << "0x" << l_int << std::dec << std::endl ;
   for(unsigned int l_index = 0; l_index < 8; ++l_index)
