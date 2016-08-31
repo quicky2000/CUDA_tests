@@ -37,10 +37,11 @@ class dim3
 };
 
 #define CUDA_KERNEL(name,args...) void name(const dim3 & threadIdx, const dim3 & blockIdx, const dim3 & blockDim, const dim3 & gridDim,args)
-
+#define CUDA_METHOD_HD_I inline
+#define gpuErrChk(ans) ans
 #define cudaFree free
-#define cudaMalloc(ptr,size) { (*ptr) = (std::remove_pointer<decltype(ptr)>::type)malloc(size);}
-#define cudaMemcpy(dest, src , size, direction) {memcpy(dest, src, size);}
+#define cudaMalloc(ptr,size) (*ptr) = (std::remove_pointer<decltype(ptr)>::type)malloc(size);
+#define cudaMemcpy(dest, src , size, direction) memcpy(dest, src, size);
 #define launch_kernels(name,grid,block,args...) { dim3 l_blockIdx(0,0,0);                                      \
   for(l_blockIdx.z = 0 ; l_blockIdx.z < grid.z ; ++l_blockIdx.z)                                               \
     {                                                                                                          \
@@ -66,6 +67,7 @@ class dim3
 #define __global__
 #else // __NVCC__
 #define CUDA_KERNEL(name,args...) __global__ void name(args)
+#define CUDA_METHOD_HD_I __device__ __host__
 
 #define launch_kernels(name,grid,block,args...) { name<<<grid,block>>>(args);}
 
