@@ -29,7 +29,7 @@ CUDA_KERNEL(cuda_kernel, uint32_t * p_int_ptr, uint32_t * p_nipples_ptr)
   p_nipples_ptr[threadIdx.x] = (*p_int_ptr & l_mask) >> l_shift;
 }
 
-int main(void)
+int launch_cuda_code(void)
 {
   uint32_t l_int = 0x87654321;
   uint32_t l_nipples[8] = {0, 0, 0, 0, 0, 0, 0, 0};
