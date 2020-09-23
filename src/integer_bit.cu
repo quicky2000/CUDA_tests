@@ -21,6 +21,9 @@
 #include <cstring>
 
 #include "my_cuda.h"
+#ifdef __NVCC__
+#include "thrust/version.h"
+#endif // __NVCC__
 
 CUDA_KERNEL(cuda_kernel, uint32_t * p_int_ptr, uint32_t * p_nipples_ptr)
 {
@@ -29,8 +32,60 @@ CUDA_KERNEL(cuda_kernel, uint32_t * p_int_ptr, uint32_t * p_nipples_ptr)
   p_nipples_ptr[threadIdx.x] = (*p_int_ptr & l_mask) >> l_shift;
 }
 
+#ifdef __NVCC__
+template <typename TYPE>
+TYPE byte_to_kilo_byte(TYPE p_value_in_byte)
+{
+    return p_value_in_byte / 1024;
+}
+
+template <typename TYPE>
+TYPE byte_to_mega_byte(TYPE p_value_in_byte)
+{
+    return byte_to_kilo_byte<TYPE>(p_value_in_byte) / 1024;
+}
+
+void display_GPU_info()
+{
+    std::cout << "CUDA version  : " << CUDART_VERSION << std::endl;
+    std::cout << "THRUST version: " << THRUST_MAJOR_VERSION << "." << THRUST_MINOR_VERSION << "." << THRUST_SUBMINOR_VERSION << std::endl;
+
+    int l_cuda_device_nb;
+    cudaGetDeviceCount(&l_cuda_device_nb);
+
+    std::cout << "Number of CUDA devices: " << l_cuda_device_nb << std::endl;
+
+    for(int l_device_index = 0; l_device_index < l_cuda_device_nb; ++l_device_index)
+    {
+        std::cout << "Cuda device[" << l_device_index << "]" << std::endl;
+        cudaDeviceProp l_properties;
+        cudaGetDeviceProperties(&l_properties, l_device_index);
+        std::cout << R"(\tName                      : ")" << l_properties.name << R"(")" << std::endl;
+        std::cout <<   "\tDevice compute capability : " << l_properties.major << "." << l_properties.minor << std::endl;
+        std::cout <<    "\tGlobal memory             : " << byte_to_mega_byte(l_properties.totalGlobalMem) << "mb" << std::endl;
+        std::cout <<    "\tShared memory             : " << byte_to_kilo_byte(l_properties.sharedMemPerBlock) << "kb" << std::endl;
+        std::cout <<    "\tConstant memory           : " << byte_to_kilo_byte(l_properties.totalConstMem) << "kb" << std::endl;
+        std::cout <<    "\tBlock registers           : " << l_properties.regsPerBlock << std::endl << std::endl;
+
+        std::cout <<    "\tWarp size                 : " << l_properties.warpSize << std::endl;
+        std::cout <<    "\tThreads per block         : " << l_properties.maxThreadsPerBlock << std::endl;
+        std::cout <<    "\tMax block dimensions      : [ " << l_properties.maxThreadsDim[0] << ", " << l_properties.maxThreadsDim[1]  << ", " << l_properties.maxThreadsDim[2] << " ]" << std::endl;
+        std::cout <<    "\tMax grid dimensions       : [ " << l_properties.maxGridSize[0] << ", " << l_properties.maxGridSize[1]  << ", " << l_properties.maxGridSize[2] << " ]" << std::endl;
+        std::cout <<    "\tMultiprocessor count      : " << l_properties.multiProcessorCount << std::endl;
+        std::cout <<    "\tConcurrent kernels        : " << l_properties.concurrentKernels << std::endl;
+        std::cout << std::endl;
+
+    }
+}
+
+#endif // __NVCC__
+
 int launch_cuda_code(void)
 {
+#ifdef __NVCC__
+  display_GPU_info();
+#endif // __NVCC__
+
   uint32_t l_int = 0x87654321;
   uint32_t l_nipples[8] = {0, 0, 0, 0, 0, 0, 0, 0};
 
