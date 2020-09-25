@@ -50,9 +50,13 @@ void display_GPU_info()
     std::cout << "CUDA version  : " << CUDART_VERSION << std::endl;
     std::cout << "THRUST version: " << THRUST_MAJOR_VERSION << "." << THRUST_MINOR_VERSION << "." << THRUST_SUBMINOR_VERSION << std::endl;
 
-    int l_cuda_device_nb;
-    cudaGetDeviceCount(&l_cuda_device_nb);
-
+    int l_cuda_device_nb = 0;
+    cudaError_t l_error = cudaGetDeviceCount(&l_cuda_device_nb);
+    if(cudaSuccess != l_error)
+    {
+	    std::cout << "ERROR : " << cudaGetErrorName(l_error) << ":" << cudaGetErrorString(l_error) << std::endl;
+	    exit(-1);
+    }
     std::cout << "Number of CUDA devices: " << l_cuda_device_nb << std::endl;
 
     for(int l_device_index = 0; l_device_index < l_cuda_device_nb; ++l_device_index)
